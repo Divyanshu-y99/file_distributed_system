@@ -25,6 +25,7 @@ func (p *TCPPeer) Close() error {
 	return p.conn.Close()
 }
 
+// various opts to configure the TCP transport
 type TCPTransportOpts struct {
 	ListenAddr    string
 	HandshakeFunc HandshakeFunc
@@ -32,6 +33,7 @@ type TCPTransportOpts struct {
 	OnPeer        func(Peer) error
 }
 
+// responsible for listening for incoming connections , accepting them , handling requests
 type TCPTransport struct {
 	TCPTransportOpts
 	listener net.Listener
@@ -51,6 +53,8 @@ func (t *TCPTransport) Consume() <-chan RPC {
 	return t.rpcch
 }
 
+// Listens on specific address and port for incoming connections
+// and hands off these connections to startAcceptLoop for processing
 func (t *TCPTransport) ListenAndAccept() error {
 	var err error
 	t.listener, err = net.Listen("tcp", t.ListenAddr)
@@ -76,6 +80,9 @@ func (t *TCPTransport) startAcceptLoop() {
 
 type Temp struct{}
 
+// this is were actual p2p coomn happens , after a connection is accepted , a TCPPeer is created
+// and a handshake is performed. after handshake node inters a loop and it reads messages(RPCS)
+// from the peer.
 func (t *TCPTransport) handleConn(conn net.Conn) {
 	var err error
 	defer func() {
